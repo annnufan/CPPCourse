@@ -10,7 +10,7 @@ _start:
                 mov             rdi, rsp
                 call            read_long
                 lea             rsi, [rsp + 128 * 8]
-                call            add_long_long
+                call            sub_long_long
 
                 call            write_long
 
@@ -25,7 +25,7 @@ _start:
 ;    rcx -- length of long numbers in qwords
 ; result:
 ;    sum is written to rdi
-add_long_long:
+sub_long_long:
                 push            rdi
                 push            rsi
                 push            rcx
