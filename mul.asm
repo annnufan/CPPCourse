@@ -298,7 +298,6 @@ mul_long_long:
                 push		r8
                 
                 mov 		r15,rcx
-                mov 		r14, rdi
                 
 .loop:
 		call		copy          
@@ -308,21 +307,18 @@ mul_long_long:
 		dec 		r15
 		jnz		.loop
 		
-		pop 		r8
-		
-		
-		;r8 -> rdi
+		pop 		r8		
+;r8 -> rdi
 		mov		r10, rdi
 		mov		rdi, r8
 		call 		copy
-		mov		rdi,r14
+		mov		rdi,r10
 		mov 		rsp, rbp
 		
 		pop 		rbp
 		pop 		rsp
 		pop		rcx
-		pop		rsi
-				
+		pop		rsi			
 		ret
 
 
