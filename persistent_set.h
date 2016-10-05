@@ -1,5 +1,5 @@
 //
-// Created by Anna Kopeliovich(annnufan@gmail,com on 04.10.2016.
+// Created by Anna Kopeliovich(annnufan@gmail.com, nufan@list.ru) on 04.10.2016.
 //
 
 #ifndef PERSISTENT_SET_PERSISTENT_SET_H

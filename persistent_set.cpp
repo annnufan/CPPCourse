@@ -1,5 +1,5 @@
 //
-// Created by Anna Kopeliovich(annnufan@gmail.com) on 04.10.2016.
+// Created by Anna Kopeliovich(annnufan@gmail.com, nufan@list.ru) on 04.10.2016.
 //
 
 #include "persistent_set.h"
