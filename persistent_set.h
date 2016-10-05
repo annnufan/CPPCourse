@@ -62,6 +62,7 @@ private:
     std::vector<iterator*> list_of_iterator;
     node* insert_value(node*, node*);
     node* erase_value(node*, node*);
+    node* simple_deleted(node*);
     //функция, инфалидирующая все итераторы this
     void invalidate_all_iterators();
 };

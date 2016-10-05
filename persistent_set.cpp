@@ -136,6 +136,12 @@ persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
     if (v->right == nullptr) {
         return left == nullptr ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
     }
+    return new node(v->right->get_min()->get_value(), v->left, simple_deleted(v->right));
+}
+
+persistent_set::node* persistent_set::simple_deleted(node* v) {
+
+
 }
 
 
