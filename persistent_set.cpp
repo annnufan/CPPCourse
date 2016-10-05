@@ -133,6 +133,9 @@ persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
     if (v->get_value() > add_node->get_value()) {
         return new node(v->get_value(), v->left, erase_value(v->right, erase_node));
     }
+    if (v->right == nullptr) {
+        return left == nullptr ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
+    }
 }
 
 
@@ -213,7 +216,7 @@ node* persistent_set::node::get_max() {
 // Инкремент невалидного итератора неопределен.
 iterator& persistent_set::iterator::operator++() {
     node* m = value->right->get_min();
-    node* r = version_root, *last_root = nullptr;
+    node* r = version_root, *last_root = version_root;
     while (r->get_value() != value->get_value()) {
         if (r->get_value() < value->get_value()) {
             last_root = r;
@@ -240,7 +243,7 @@ iterator persistent_set::iterator::operator++(int) {
 // Декремент невалидного итератора неопределен.
 iterator& persistent_set::iterator::operator--() {
     node* m = value->left->get_max();
-    node* r = version_root, *last_root = nullptr;
+    node* r = version_root, *last_root = version_root;
     while (r->get_value() != value->get_value()) {
         if (r->get_value() < value->get_value()) {
             last_root = r;
