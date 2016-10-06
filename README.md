@@ -1,5 +1,5 @@
 # persistent_set
-Version without erase
+OK Version
 
 For Cpp-Course in ITMO Univerity
 by Kopeliovich(Vorobyeva) Anna
