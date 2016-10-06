@@ -46,7 +46,7 @@ persistent_set::~persistent_set() {
 
 
 // Поиск элемента.
-// Возвращает итератор на элемент найденный элемент, либо end().
+// Возвращает итератор на найденный элемент, либо end().
 persistent_set::iterator persistent_set::find(value_type val) {
     assert(root != nullptr);
     node* now_node = root;
@@ -87,13 +87,14 @@ std::pair<persistent_set::iterator, bool> persistent_set::insert(value_type val)
     if (f.value != root) {
         return std::make_pair(f, false);
     }
-    node* add_node= new node(val);
+    node* add_node = new node(val);
     invalidate_all_iterators();
+    root->dec_node();
     root = insert_value(root, add_node);
     return std::make_pair(iterator(add_node, root), true);
 };
 
-
+//Функция, добавляющая новый элемент в наш сет
 persistent_set::node* persistent_set::insert_value(node* v, node* add_node) {
     if (v->get_value() > add_node->get_value()) {
         if (v->left == nullptr) {
@@ -252,6 +253,7 @@ persistent_set::iterator& persistent_set::iterator::operator++() {
     return *this;
 }
 persistent_set::iterator persistent_set::iterator::operator++(int) {
+    assert(value != nullptr);
     iterator ans(value, version_root);
     iterator me = *this;
     *this = ++me;
@@ -307,6 +309,7 @@ void persistent_set::node::print_node(node* v) {
     std::cout << ')';
 }
 
+/* Testing part
 int main() {
     int a[6] = {2, 5, 3, 7, 1, 9};
     persistent_set me;
@@ -319,14 +322,14 @@ int main() {
     while (ex != me.begin()) {
         std::cout << *(ex--) << std::endl;
     }
-    /*for (int i : a) {
+    for (int i : a) {
         me.erase(me.find(i));
         me.print();
-    }*/
+    }
     for (int i : a) {
         me.erase(me.find(i));
         ex = me.begin();
         std::cout << *ex << std::endl;
     }
     return 0;
-}
+}*/

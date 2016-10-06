@@ -61,6 +61,7 @@ private:
     node* root;
     //список всех итераторов данного set
     std::vector<iterator*> list_of_iterator;
+
     node* insert_value(node*, node*);
     node* erase_value(node*, node*);
     node* simple_deleted(node*);
@@ -81,6 +82,8 @@ struct persistent_set::node {
     //левый и правый соседи вершинки
     node* left;
     node* right;
+
+    //минимальный и максимальный элементы в нашем поддереве
     node* get_min();
     node* get_max();
     static void print_node(persistent_set::node*);
@@ -88,6 +91,8 @@ struct persistent_set::node {
 private:
     //значение в this вершине
     value_type value;
+
+    //счетчик ссылок на вершину
     int count = 0;
 };
 
@@ -112,6 +117,8 @@ struct persistent_set::iterator {
     // Декремент невалидного итератора неопределен.
     iterator& operator--();
     iterator operator--(int);
+
+
     node* value;
     node* version_root;
 };
