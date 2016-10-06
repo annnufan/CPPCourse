@@ -204,14 +204,18 @@ bool operator!=(persistent_set::iterator u, persistent_set::iterator v) {
 }
 
 persistent_set::node* persistent_set::node::get_min() {
+    assert(this != nullptr);
     node* use = this;
+   // std::cerr << use->get_value() << std::endl;
     while (use -> left != nullptr) {
-        use = use -> left;
+        use = use->left;
+   //     std::cerr << use->get_value() << std::endl;
     }
     return use;
 }
 
 persistent_set::node* persistent_set::node::get_max() {
+    assert(this != nullptr);
     node* use = this;
     while (use -> right != nullptr) {
         use = use -> right;
@@ -224,9 +228,13 @@ persistent_set::node* persistent_set::node::get_max() {
 // Инкремент итератора end() неопределен.
 // Инкремент невалидного итератора неопределен.
 persistent_set::iterator& persistent_set::iterator::operator++() {
-    node* m = value->right->get_min();
+    if (value->right != nullptr) {
+        std::cerr << "has right subtree" << std::endl;
+        value = value->right->get_min();
+        return *this;
+    }
     node* r = version_root, *last_root = version_root;
-    while (r->get_value() != value->get_value()) {
+    while (r->right != value && r->left != value) {
         if (r->get_value() < value->get_value()) {
             last_root = r;
             r = r->right;
@@ -235,10 +243,11 @@ persistent_set::iterator& persistent_set::iterator::operator++() {
             r = r->left;
         }
     }
-    if (last_root->get_value() < m->get_value())
+    if (r->left == value) {
+        value = r;
+    } else {
         value = last_root;
-    else
-        value = m;
+    }
     return *this;
 }
 persistent_set::iterator persistent_set::iterator::operator++(int) {
@@ -253,9 +262,12 @@ persistent_set::iterator persistent_set::iterator::operator++(int) {
 // Декремент итератора begin() неопределен.
 // Декремент невалидного итератора неопределен.
 persistent_set::iterator& persistent_set::iterator::operator--() {
-    node* m = value->left->get_max();
+    if (value -> left != nullptr) {
+        value = value->left->get_max();
+        return *this;
+    }
     node* r = version_root, *last_root = version_root;
-    while (r->get_value() != value->get_value()) {
+    while (r->right != value && r->left != value) {
         if (r->get_value() < value->get_value()) {
             last_root = r;
             r = r->right;
@@ -264,13 +276,15 @@ persistent_set::iterator& persistent_set::iterator::operator--() {
             r = r->left;
         }
     }
-    if (last_root->get_value() > m->get_value())
+    if (r -> right == value) {
+        value = r;
+    } else {
         value = last_root;
-    else
-        value = m;
+    }
     return *this;
 }
 persistent_set::iterator persistent_set::iterator::operator--(int) {
+    assert(value != nullptr);
     iterator ans(value, version_root);
     iterator me = *this;
     --me;
@@ -278,15 +292,23 @@ persistent_set::iterator persistent_set::iterator::operator--(int) {
     return ans;
 }
 
+void persistent_set::print() {
+
+}
+
 int main() {
     int a[6] = {2, 5, 3, 7, 1, 9};
     persistent_set me;
+    me.insert(1);
+    //std::cerr << me.root->left->get_value();
     for (int i : a) {
         me.insert(i);
     }
-    persistent_set::iterator ex = me.end();
-    while (ex != me.begin()) {
-        std::cout << *(ex--) << std::endl;
+    me.print();
+    persistent_set::iterator ex = me.begin();
+    std::cout << *(ex) << std::endl;
+    while (ex != me.end()) {
+        std::cout << *(++ex) << std::endl;
     }
     /*for (int i : a) {
         me.erase(me.find(i));
