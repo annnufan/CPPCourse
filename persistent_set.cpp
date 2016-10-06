@@ -140,8 +140,9 @@ persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
 }
 
 persistent_set::node* persistent_set::simple_deleted(node* v) {
-
-
+    if (v->left == nullptr)
+        return nullptr;
+    return new node(v->get_value(), simple_deleted(v->left), v->right);
 }
 
 
