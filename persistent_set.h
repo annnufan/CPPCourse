@@ -76,14 +76,16 @@ struct persistent_set::node {
     //увеличивает число ссылок на нее
     void add();
     //посмотреть значение в this
-    value_type get_value();
+    value_type& get_value();
     //левый и правый соседи вершинки
     node* left;
     node* right;
     node* get_min();
     node* get_max();
-private:
+
+    node* operator=(node*);
     //значение в this вершине
+private:
     value_type value;
     int count = 0;
 };

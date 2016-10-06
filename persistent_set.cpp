@@ -7,6 +7,7 @@
 typedef int value_type;
 
 #include <cassert>
+#include <iostream>
 
 // Создает пустой persistent_set.
 persistent_set::persistent_set() {
@@ -79,23 +80,26 @@ void persistent_set::invalidate_all_iterators() {
 //    элемент и true.
 // Инвалидирует все итераторы, принадлежащие persistent_set'у this, включая end().
 std::pair<persistent_set::iterator, bool> persistent_set::insert(value_type val) {
+    assert(root != nullptr);
     iterator f = find(val);
     if (f.value != root) {
         return std::make_pair(f, false);
     }
     node* add_node= new node(val);
     invalidate_all_iterators();
-    return std::make_pair(iterator(add_node, root = insert_value(root, add_node)), true);
+    root = insert_value(root, add_node);
+    return std::make_pair(iterator(add_node, root), true);
 };
 
 
 persistent_set::node* persistent_set::insert_value(node* v, node* add_node) {
-    if (v->get_value() < add_node->get_value()) {
+    if (v->get_value() > add_node->get_value()) {
         if (v->left == nullptr) {
             return new node(v->get_value(), add_node, v->right);
         }
         return new node(v->get_value(), insert_value(v->left, add_node), v->right);
     }
+//    std::cout << "WARNING " << v->get_value() << std::endl;
     if (v->right == nullptr) {
         return new node(v->get_value(), v->left, add_node);
     }
@@ -104,6 +108,7 @@ persistent_set::node* persistent_set::insert_value(node* v, node* add_node) {
 
 // Возващает итератор на элемент с минимальный ключом.
 persistent_set::iterator persistent_set::begin() const {
+    assert(root != nullptr);
     node* use = root;
     while (use -> left != nullptr) {
         use = use -> left;
@@ -113,6 +118,7 @@ persistent_set::iterator persistent_set::begin() const {
 
 // Возващает итератор на элемент следующий за элементом с максимальным ключом.
 persistent_set::iterator persistent_set::end() const {
+    assert(root != nullptr);
     return iterator(root, root);
 }
 
@@ -165,7 +171,7 @@ void persistent_set::node::dec_node() {
     }
 }
 
-value_type persistent_set::node::get_value() {
+value_type& persistent_set::node::get_value(){
     return value;
 }
 
@@ -184,8 +190,7 @@ persistent_set::iterator::iterator(node* x, node* v) {
 // Разыменование невалидного итератора неопределено.
 value_type const& persistent_set::iterator::operator*() const {
     assert(value != nullptr);
-    value_type ans = value->get_value();
-    return ans;
+    return value->get_value();
 }
 
 // Сравнение. Итераторы считаются эквивалентными если одни ссылаются на один и тот же элемент.
@@ -274,5 +279,19 @@ persistent_set::iterator persistent_set::iterator::operator--(int) {
 }
 
 int main() {
+    int a[6] = {2, 5, 3, 7, 1, 9};
+    persistent_set me;
+    for (int i : a) {
+        me.insert(i);
+    }
+    persistent_set::iterator ex = me.end();
+    while (ex != me.begin()) {
+        std::cout << *(ex--) << std::endl;
+    }
+    /*for (int i : a) {
+        me.erase(me.find(i));
+        ex = me.begin();
+        std::cout << *ex << std::endl;
+    }*/
     return 0;
 }
