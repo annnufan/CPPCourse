@@ -140,14 +140,14 @@ persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
         return new node(v->get_value(), v->left, erase_value(v->right, erase_node));
     }
     if (v->right == nullptr) {
-        return v->left == nullptr ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
+        return (v->left == nullptr) ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
     }
     return new node(v->right->get_min()->get_value(), v->left, simple_deleted(v->right));
 }
 
 persistent_set::node* persistent_set::simple_deleted(node* v) {
     if (v->left == nullptr)
-        return nullptr;
+        return (v->right == nullptr) ? nullptr : new node(v->right->get_value(), v->right->left, v->right->right);
     return new node(v->get_value(), simple_deleted(v->left), v->right);
 }
 
@@ -209,10 +209,8 @@ bool operator!=(persistent_set::iterator u, persistent_set::iterator v) {
 persistent_set::node* persistent_set::node::get_min() {
     assert(this != nullptr);
     node* use = this;
-   // std::cerr << use->get_value() << std::endl;
     while (use -> left != nullptr) {
         use = use->left;
-   //     std::cerr << use->get_value() << std::endl;
     }
     return use;
 }
@@ -256,8 +254,7 @@ persistent_set::iterator& persistent_set::iterator::operator++() {
 persistent_set::iterator persistent_set::iterator::operator++(int) {
     iterator ans(value, version_root);
     iterator me = *this;
-    ++me;
-    *this = me;
+    *this = ++me;
     return ans;
 }
 
@@ -291,8 +288,7 @@ persistent_set::iterator persistent_set::iterator::operator--(int) {
     assert(value != nullptr);
     iterator ans(value, version_root);
     iterator me = *this;
-    --me;
-    *this = me;
+    *this = --me;
     return ans;
 }
 
@@ -319,20 +315,18 @@ int main() {
     }
     me.print();
     persistent_set::iterator ex = me.end();
-    /*std::cout << *(ex) << std::endl;
+    std::cout << *(ex) << std::endl;
     while (ex != me.begin()) {
         std::cout << *(ex--) << std::endl;
+    }
+    /*for (int i : a) {
+        me.erase(me.find(i));
+        me.print();
     }*/
     for (int i : a) {
         me.erase(me.find(i));
-        me.print();
-    }
-    /*for (int i : a) {
-        ex = me.find(i);
-        std::cout << *ex << ' ';
-        me.erase(ex);
         ex = me.begin();
         std::cout << *ex << std::endl;
-    }*/
+    }
     return 0;
 }
