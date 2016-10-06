@@ -89,7 +89,6 @@ std::pair<persistent_set::iterator, bool> persistent_set::insert(value_type val)
 };
 
 
-//TODO make real parent
 persistent_set::node* persistent_set::insert_value(node* v, node* add_node) {
     if (v->get_value() < add_node->get_value()) {
         if (v->left == nullptr) {
@@ -117,24 +116,22 @@ persistent_set::iterator persistent_set::end() const {
     return iterator(root, root);
 }
 
-
-//TODO
  // Удаление элемента.
 // Инвалидирует все итераторы, принадлежащие persistent_set'у this, включая end().
 void persistent_set::erase(iterator elem) {
     invalidate_all_iterators();
-    root = erase_value(elem->version_root, elem->value);
+    root = erase_value(elem.version_root, elem.value);
 }
 
 persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
-    if (v->get_value() < add_node->get_value()) {
+    if (v->get_value() < erase_node->get_value()) {
         return new node(v->get_value(), erase_value(v->left, erase_node), v->right);
     }
-    if (v->get_value() > add_node->get_value()) {
+    if (v->get_value() > erase_node->get_value()) {
         return new node(v->get_value(), v->left, erase_value(v->right, erase_node));
     }
     if (v->right == nullptr) {
-        return left == nullptr ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
+        return v->left == nullptr ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
     }
     return new node(v->right->get_min()->get_value(), v->left, simple_deleted(v->right));
 }
@@ -152,7 +149,7 @@ persistent_set::node::node() {
     left = right = nullptr;
 }
 
-persistent_set::node::node(value_type v, node* l = nullptr, node* r = nullptr) {
+persistent_set::node::node(value_type v, node* l, node* r) {
     value = v;
     count = 1;
     left = l;
@@ -164,7 +161,7 @@ persistent_set::node::node(value_type v, node* l = nullptr, node* r = nullptr) {
 void persistent_set::node::dec_node() {
     count--;
     if (count == 0) {
-        delete *this;
+        delete this;
     }
 }
 
@@ -201,7 +198,7 @@ bool operator!=(persistent_set::iterator u, persistent_set::iterator v) {
     return u.value != v.value || u.version_root != v.version_root;
 }
 
-node* persistent_set::node::get_min() {
+persistent_set::node* persistent_set::node::get_min() {
     node* use = this;
     while (use -> left != nullptr) {
         use = use -> left;
@@ -209,7 +206,7 @@ node* persistent_set::node::get_min() {
     return use;
 }
 
-node* persistent_set::node::get_max() {
+persistent_set::node* persistent_set::node::get_max() {
     node* use = this;
     while (use -> right != nullptr) {
         use = use -> right;
@@ -221,7 +218,7 @@ node* persistent_set::node::get_max() {
 // Переход к элементу со следующим по величине ключом.
 // Инкремент итератора end() неопределен.
 // Инкремент невалидного итератора неопределен.
-iterator& persistent_set::iterator::operator++() {
+persistent_set::iterator& persistent_set::iterator::operator++() {
     node* m = value->right->get_min();
     node* r = version_root, *last_root = version_root;
     while (r->get_value() != value->get_value()) {
@@ -239,16 +236,18 @@ iterator& persistent_set::iterator::operator++() {
         value = m;
     return *this;
 }
-iterator persistent_set::iterator::operator++(int) {
+persistent_set::iterator persistent_set::iterator::operator++(int) {
     iterator ans(value, version_root);
-    ++this;
+    iterator me = *this;
+    ++me;
+    *this = me;
     return ans;
 }
 
 // Переход к элементу со следующим по величине ключом.
 // Декремент итератора begin() неопределен.
 // Декремент невалидного итератора неопределен.
-iterator& persistent_set::iterator::operator--() {
+persistent_set::iterator& persistent_set::iterator::operator--() {
     node* m = value->left->get_max();
     node* r = version_root, *last_root = version_root;
     while (r->get_value() != value->get_value()) {
@@ -266,9 +265,11 @@ iterator& persistent_set::iterator::operator--() {
         value = m;
     return *this;
 }
-iterator persistent_set::iterator::operator--(int) {
+persistent_set::iterator persistent_set::iterator::operator--(int) {
     iterator ans(value, version_root);
-    --this;
+    iterator me = *this;
+    --me;
+    *this = me;
     return ans;
 }
 
