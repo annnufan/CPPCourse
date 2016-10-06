@@ -7,6 +7,7 @@
 typedef int value_type;
 
 #include <cassert>
+#include <vector>
 #include <iostream>
 
 // Создает пустой persistent_set.
@@ -47,9 +48,10 @@ persistent_set::~persistent_set() {
 // Поиск элемента.
 // Возвращает итератор на элемент найденный элемент, либо end().
 persistent_set::iterator persistent_set::find(value_type val) {
+    assert(root != nullptr);
     node* now_node = root;
     while (now_node != nullptr && now_node->get_value() != val) {
-        if (now_node->get_value() > val) {
+        if (now_node->get_value() < val) {
             now_node = now_node->right;
         } else {
             now_node = now_node->left;
@@ -229,24 +231,26 @@ persistent_set::node* persistent_set::node::get_max() {
 // Инкремент невалидного итератора неопределен.
 persistent_set::iterator& persistent_set::iterator::operator++() {
     if (value->right != nullptr) {
-        std::cerr << "has right subtree" << std::endl;
+        //std::cerr << "has right subtree" << std::endl;
         value = value->right->get_min();
         return *this;
     }
-    node* r = version_root, *last_root = version_root;
+    node* r = version_root;
+    std::vector<*node> parent;
     while (r->right != value && r->left != value) {
+        parent.push_back(r);
         if (r->get_value() < value->get_value()) {
-            last_root = r;
             r = r->right;
         } else {
-            last_root = r;
             r = r->left;
         }
     }
     if (r->left == value) {
         value = r;
     } else {
-        value = last_root;
+        while (parent.back()->left == value)
+            parent.pop_back();
+        value = parent.back();
     }
     return *this;
 }
@@ -293,13 +297,22 @@ persistent_set::iterator persistent_set::iterator::operator--(int) {
 }
 
 void persistent_set::print() {
+    node::print_node(root);
+}
 
+void persistent_set::node::print_node(node* v) {
+    if (v == nullptr)
+        return;
+    std::cout << '(';
+    print_node(v->left);
+    std::cout << v->get_value();
+    print_node(v->right);
+    std::cout << ')';
 }
 
 int main() {
-    int a[6] = {2, 5, 3, 7, 1, 9};
+    int a[7] = {2, 5, 3, 7, 1, 9, 1};
     persistent_set me;
-    me.insert(1);
     //std::cerr << me.root->left->get_value();
     for (int i : a) {
         me.insert(i);

@@ -52,7 +52,6 @@ struct persistent_set
     iterator begin() const;
     // Возващает итератор на элемент следующий за элементом с максимальным ключом.
     iterator end() const;
-
     void print();
 
 private:
@@ -84,6 +83,7 @@ struct persistent_set::node {
     node* right;
     node* get_min();
     node* get_max();
+    static void print_node(persistent_set::node*);
 
 private:
     //значение в this вершине
