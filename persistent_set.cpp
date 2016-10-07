@@ -7,7 +7,6 @@
 typedef int value_type;
 
 #include <cassert>
-#include <vector>
 #include <iostream>
 
 // Создает пустой persistent_set.
@@ -89,7 +88,6 @@ std::pair<persistent_set::iterator, bool> persistent_set::insert(value_type val)
     }
     node* add_node = new node(val);
     invalidate_all_iterators();
-    root->dec_node();
     root = insert_value(root, add_node);
     return std::make_pair(iterator(add_node, root), true);
 };
@@ -309,7 +307,7 @@ void persistent_set::node::print_node(node* v) {
     std::cout << ')';
 }
 
-/* Testing part
+// Testing part
 int main() {
     int a[6] = {2, 5, 3, 7, 1, 9};
     persistent_set me;
@@ -326,10 +324,10 @@ int main() {
         me.erase(me.find(i));
         me.print();
     }
-    for (int i : a) {
+/*    for (int i : a) {
         me.erase(me.find(i));
         ex = me.begin();
         std::cout << *ex << std::endl;
     }
-    return 0;
-}*/
+  */  return 0;
+}
