@@ -185,7 +185,7 @@ persistent_set::iterator::iterator(node* x, node* v) {
 // –азыменование итератора end() неопределено.
 // –азыменование невалидного итератора неопределено.
 value_type const& persistent_set::iterator::operator*() const {
-	assert(value != nullptr && version_root->valid);
+	assert(version_root->valid);
 	return value->get_value();
 }
 
