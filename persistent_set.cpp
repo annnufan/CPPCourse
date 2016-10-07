@@ -9,325 +9,321 @@ typedef int value_type;
 #include <cassert>
 #include <iostream>
 
-// РЎРѕР·РґР°РµС‚ РїСѓСЃС‚РѕР№ persistent_set.
+// Создает пустой persistent_set.
 persistent_set::persistent_set() {
-    root = new node();
+	root = new node();
 }
 
-// РЎРѕР·РґР°РµС‚ РєРѕРїРёСЋ СѓРєР°Р·Р°РЅРЅРѕРіРѕ persistent_set-Р°.
+// Создает копию указанного persistent_set-а.
 persistent_set::persistent_set(persistent_set const &rhs) {
-    assert(rhs.root != nullptr);
-    root = new node();
-    root->left = rhs.root->left;
+	assert(rhs.root != nullptr);
+	root = new node();
+	root->left = rhs.root->left;
 }
 
-// РР·РјРµРЅСЏРµС‚ this С‚Р°Рє, С‡С‚РѕР±С‹ РѕРЅ СЃРѕРґРµСЂР¶Р°Р» С‚Рµ Р¶Рµ СЌР»РµРјРµРЅС‚С‹, С‡С‚Рѕ Рё rhs.
-// РРЅРІР°Р»РёРґРёСЂСѓРµС‚ РІСЃРµ РёС‚РµСЂР°С‚РѕСЂС‹, РїСЂРёРЅР°РґР»РµР¶Р°С‰РёРµ persistent_set'Сѓ this, РІРєР»СЋС‡Р°СЏ end().
+// Изменяет this так, чтобы он содержал те же элементы, что и rhs.
+// Инвалидирует все итераторы, принадлежащие persistent_set'у this, включая end().
 persistent_set& persistent_set::operator=(persistent_set const& rhs) {
-    if (root != nullptr) {
-        invalidate_all_iterators();
-        root->dec_node();
-    }
-    root = new node();
-    root->left = rhs.root->left;
-    return *this;
+	if (root != nullptr) {
+		root->dec_node();
+		root->valid = false;
+	}
+	root = new node();
+	root->left = rhs.root->left;
+	return *this;
 }
 
-// Р”РµСЃС‚СЂСѓРєС‚РѕСЂ. Р’С‹Р·С‹РІР°РµС‚СЃСЏ РїСЂРё СѓРґР°Р»РµРЅРёРё РѕР±СЉРµРєС‚РѕРІ persistent_set.
-// РРЅРІР°Р»РёРґРёСЂСѓРµС‚ РІСЃРµ РёС‚РµСЂР°С‚РѕСЂС‹ СЃСЃС‹Р»Р°СЋС‰РёРµСЃСЏ РЅР° СЌР»РµРјРµРЅС‚С‹ СЌС‚РѕРіРѕ persistent_set
-// (РІРєР»СЋС‡Р°СЏ РёС‚РµСЂР°С‚РѕСЂС‹ СЃСЃС‹Р»Р°СЋС‰РёРµСЃСЏ РЅР° СЌР»РµРјРµРЅС‚С‹ СЃР»РµРґСѓСЋС‰РёРµ Р·Р° РїРѕСЃР»РµРґРЅРёРјРё).
+// Деструктор. Вызывается при удалении объектов persistent_set.
+// Инвалидирует все итераторы ссылающиеся на элементы этого persistent_set
+// (включая итераторы ссылающиеся на элементы следующие за последними).
 persistent_set::~persistent_set() {
-    assert(root != nullptr);
-    invalidate_all_iterators();
-    root->dec_node();
-    root = nullptr;
+	assert(root != nullptr);
+	root->dec_node();
+	root->valid = false;
+	root = nullptr;
 }
 
 
-// РџРѕРёСЃРє СЌР»РµРјРµРЅС‚Р°.
-// Р’РѕР·РІСЂР°С‰Р°РµС‚ РёС‚РµСЂР°С‚РѕСЂ РЅР° РЅР°Р№РґРµРЅРЅС‹Р№ СЌР»РµРјРµРЅС‚, Р»РёР±Рѕ end().
+// Поиск элемента.
+// Возвращает итератор на найденный элемент, либо end().
 persistent_set::iterator persistent_set::find(value_type val) {
-    assert(root != nullptr);
-    node* now_node = root;
-    while (now_node != nullptr && now_node->get_value() != val) {
-        if (now_node->get_value() < val) {
-            now_node = now_node->right;
-        } else {
-            now_node = now_node->left;
-        }
-    }
-    iterator ans;
-    if (now_node == nullptr)
-        ans = iterator(root, root);
-    else
-        ans = iterator(now_node, root);
-    list_of_iterator.push_back(&ans);
-    return ans;
+	assert(root != nullptr);
+	node* now_node = root;
+	while (now_node != nullptr && now_node->get_value() != val) {
+		if (now_node->get_value() < val) {
+			now_node = now_node->right;
+		}
+		else {
+			now_node = now_node->left;
+		}
+	}
+	iterator ans;
+	if (now_node == nullptr)
+		ans = iterator(root, root);
+	else
+		ans = iterator(now_node, root);
+	return ans;
 }
 
-//С„СѓРЅРєС†РёСЏ, РёРЅРІР°Р»РёРґРёСЂСѓСЋС‰Р°СЏ РІСЃРµ РёС‚РµСЂР°С‚РѕСЂС‹ this
-void persistent_set::invalidate_all_iterators() {
-    while (!list_of_iterator.empty()) {
-        iterator* x = list_of_iterator.back();
-        list_of_iterator.pop_back();
-        x->value = nullptr;
-    }
-}
 
-// Р’СЃС‚Р°РІРєР° СЌР»РµРјРµРЅС‚Р°.
-// 1. Р•СЃР»Рё С‚Р°РєРѕР№ РєР»СЋС‡ СѓР¶Рµ РїСЂРёСЃСѓС‚СЃС‚РІСѓРµС‚, РІСЃС‚Р°РІРєР° РЅРµ РїСЂРѕРёР·РІРѕРґРёС‚СЊСЃСЏ, РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ РёС‚РµСЂР°С‚РѕСЂ
-//    РЅР° СѓР¶Рµ РїСЂРёСЃСѓС‚СЃС‚РІСѓСЋС‰РёР№ СЌР»РµРјРµРЅС‚ Рё false.
-// 2. Р•СЃР»Рё С‚Р°РєРѕРіРѕ РєР»СЋС‡Р° РµС‰С‘ РЅРµС‚, РїСЂРѕРёР·РІРѕРґРёС‚СЊСЃСЏ РІСЃС‚Р°РІРєР°, РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ РёС‚РµСЂР°С‚РѕСЂ РЅР° СЃРѕР·РґР°РЅРЅС‹Р№
-//    СЌР»РµРјРµРЅС‚ Рё true.
-// РРЅРІР°Р»РёРґРёСЂСѓРµС‚ РІСЃРµ РёС‚РµСЂР°С‚РѕСЂС‹, РїСЂРёРЅР°РґР»РµР¶Р°С‰РёРµ persistent_set'Сѓ this, РІРєР»СЋС‡Р°СЏ end().
+// Вставка элемента.
+// 1. Если такой ключ уже присутствует, вставка не производиться, возвращается итератор
+//    на уже присутствующий элемент и false.
+// 2. Если такого ключа ещё нет, производиться вставка, возвращается итератор на созданный
+//    элемент и true.
+// Инвалидирует все итераторы, принадлежащие persistent_set'у this, включая end().
 std::pair<persistent_set::iterator, bool> persistent_set::insert(value_type val) {
-    assert(root != nullptr);
-    iterator f = find(val);
-    if (f.value != root) {
-        return std::make_pair(f, false);
-    }
-    node* add_node = new node(val);
-    invalidate_all_iterators();
-    root = insert_value(root, add_node);
-    return std::make_pair(iterator(add_node, root), true);
+	assert(root != nullptr);
+	iterator f = find(val);
+	if (f.value != root) {
+		return std::make_pair(f, false);
+	}
+	node* add_node = new node(val);
+	root->valid = false;
+	root = insert_value(root, add_node);
+	return std::make_pair(iterator(add_node, root), true);
 };
 
-//Р¤СѓРЅРєС†РёСЏ, РґРѕР±Р°РІР»СЏСЋС‰Р°СЏ РЅРѕРІС‹Р№ СЌР»РµРјРµРЅС‚ РІ РЅР°С€ СЃРµС‚
+//Функция, добавляющая новый элемент в наш сет
 persistent_set::node* persistent_set::insert_value(node* v, node* add_node) {
-    if (v->get_value() > add_node->get_value()) {
-        if (v->left == nullptr) {
-            return new node(v->get_value(), add_node, v->right);
-        }
-        return new node(v->get_value(), insert_value(v->left, add_node), v->right);
-    }
-//    std::cout << "WARNING " << v->get_value() << std::endl;
-    if (v->right == nullptr) {
-        return new node(v->get_value(), v->left, add_node);
-    }
-    return new node(v->get_value(), v->left, insert_value(v->right, add_node));
+	if (v->get_value() > add_node->get_value()) {
+		if (v->left == nullptr) {
+			return new node(v->get_value(), add_node, v->right);
+		}
+		return new node(v->get_value(), insert_value(v->left, add_node), v->right);
+	}
+	//    std::cout << "WARNING " << v->get_value() << std::endl;
+	if (v->right == nullptr) {
+		return new node(v->get_value(), v->left, add_node);
+	}
+	return new node(v->get_value(), v->left, insert_value(v->right, add_node));
 };
 
-// Р’РѕР·РІР°С‰Р°РµС‚ РёС‚РµСЂР°С‚РѕСЂ РЅР° СЌР»РµРјРµРЅС‚ СЃ РјРёРЅРёРјР°Р»СЊРЅС‹Р№ РєР»СЋС‡РѕРј.
+// Возващает итератор на элемент с минимальный ключом.
 persistent_set::iterator persistent_set::begin() const {
-    assert(root != nullptr);
-    node* use = root;
-    while (use -> left != nullptr) {
-        use = use -> left;
-    }
-    return iterator(use, root);
+	assert(root != nullptr);
+	node* use = root;
+	while (use->left != nullptr) {
+		use = use->left;
+	}
+	return iterator(use, root);
 }
 
-// Р’РѕР·РІР°С‰Р°РµС‚ РёС‚РµСЂР°С‚РѕСЂ РЅР° СЌР»РµРјРµРЅС‚ СЃР»РµРґСѓСЋС‰РёР№ Р·Р° СЌР»РµРјРµРЅС‚РѕРј СЃ РјР°РєСЃРёРјР°Р»СЊРЅС‹Рј РєР»СЋС‡РѕРј.
+// Возващает итератор на элемент следующий за элементом с максимальным ключом.
 persistent_set::iterator persistent_set::end() const {
-    assert(root != nullptr);
-    return iterator(root, root);
+	assert(root != nullptr);
+	return iterator(root, root);
 }
 
- // РЈРґР°Р»РµРЅРёРµ СЌР»РµРјРµРЅС‚Р°.
-// РРЅРІР°Р»РёРґРёСЂСѓРµС‚ РІСЃРµ РёС‚РµСЂР°С‚РѕСЂС‹, РїСЂРёРЅР°РґР»РµР¶Р°С‰РёРµ persistent_set'Сѓ this, РІРєР»СЋС‡Р°СЏ end().
+// Удаление элемента.
+// Инвалидирует все итераторы, принадлежащие persistent_set'у this, включая end().
 void persistent_set::erase(iterator elem) {
-    assert(elem.value != nullptr);
-    invalidate_all_iterators();
-    root = erase_value(elem.version_root, elem.value);
+	assert(elem.value != nullptr);
+	root->valid = false;
+	root = erase_value(elem.version_root, elem.value);
 }
 
 persistent_set::node* persistent_set::erase_value(node* v, node* erase_node) {
-    if (v->get_value() > erase_node->get_value()) {
-        return new node(v->get_value(), erase_value(v->left, erase_node), v->right);
-    }
-    if (v->get_value() < erase_node->get_value()) {
-        return new node(v->get_value(), v->left, erase_value(v->right, erase_node));
-    }
-    if (v->right == nullptr) {
-        return (v->left == nullptr) ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
-    }
-    return new node(v->right->get_min()->get_value(), v->left, simple_deleted(v->right));
+	if (v->get_value() > erase_node->get_value()) {
+		return new node(v->get_value(), erase_value(v->left, erase_node), v->right);
+	}
+	if (v->get_value() < erase_node->get_value()) {
+		return new node(v->get_value(), v->left, erase_value(v->right, erase_node));
+	}
+	if (v->right == nullptr) {
+		return (v->left == nullptr) ? nullptr : new node(v->left->get_value(), v->left->left, v->left->right);
+	}
+	return new node(v->right->get_min()->get_value(), v->left, simple_deleted(v->right));
 }
 
 persistent_set::node* persistent_set::simple_deleted(node* v) {
-    if (v->left == nullptr)
-        return (v->right == nullptr) ? nullptr : new node(v->right->get_value(), v->right->left, v->right->right);
-    return new node(v->get_value(), simple_deleted(v->left), v->right);
+	if (v->left == nullptr)
+		return (v->right == nullptr) ? nullptr : new node(v->right->get_value(), v->right->left, v->right->right);
+	return new node(v->get_value(), simple_deleted(v->left), v->right);
 }
 
 
 persistent_set::node::node() {
-    value = INT_MAX;
-    count = 1;
-    left = right = nullptr;
+	value = INT_MAX;
+	count = 1;
+	left = right = nullptr;
+	valid = true;
 }
 
 persistent_set::node::node(value_type v, node* l, node* r) {
-    value = v;
-    count = 1;
-    left = l;
-    right = r;
+	value = v;
+	count = 1;
+	left = l;
+	right = r;
+	valid = true;
 }
 
-//СѓРјРµРЅСЊС€Р°РµС‚ С‡РёСЃР»Рѕ СЃСЃС‹Р»РѕРє РЅР° РЅРµРµ
-//РµСЃР»Рё СЃСЃС‹Р»РѕРє 0, РІРµСЂС€РёРЅР° СѓРґР°Р»СЏРµС‚СЃСЏ
+//уменьшает число ссылок на нее
+//если ссылок 0, вершина удаляется
 void persistent_set::node::dec_node() {
-    count--;
-    if (count == 0) {
-        delete this;
-    }
+	count--;
+	if (count == 0) {
+		delete this;
+	}
 }
 
-value_type& persistent_set::node::get_value(){
-    return value;
+value_type& persistent_set::node::get_value() {
+	return value;
 }
 
-//РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ Рё РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РѕС‚ СЃСЃС‹Р»РєРё РЅР° РѕРїСЂРµРґРµР»РµРЅРЅСѓСЋ node
+//конструктор по умолчанию и конструктор от ссылки на определенную node
 persistent_set::iterator::iterator() {
-    value = version_root = nullptr;
+	value = version_root = nullptr;
 }
 
 persistent_set::iterator::iterator(node* x, node* v) {
-    value = x;
-    version_root = v;
+	value = x;
+	version_root = v;
 }
 
-// Р­Р»РµРјРµРЅС‚ РЅР° РєРѕС‚РѕСЂС‹Р№ СЃРµР№С‡Р°СЃ СЃСЃС‹Р»Р°РµС‚СЃСЏ РёС‚РµСЂР°С‚РѕСЂ.
-// Р Р°Р·С‹РјРµРЅРѕРІР°РЅРёРµ РёС‚РµСЂР°С‚РѕСЂР° end() РЅРµРѕРїСЂРµРґРµР»РµРЅРѕ.
-// Р Р°Р·С‹РјРµРЅРѕРІР°РЅРёРµ РЅРµРІР°Р»РёРґРЅРѕРіРѕ РёС‚РµСЂР°С‚РѕСЂР° РЅРµРѕРїСЂРµРґРµР»РµРЅРѕ.
+// Элемент на который сейчас ссылается итератор.
+// Разыменование итератора end() неопределено.
+// Разыменование невалидного итератора неопределено.
 value_type const& persistent_set::iterator::operator*() const {
-    assert(value != nullptr);
-    return value->get_value();
+	assert(value != nullptr && version_root->valid);
+	return value->get_value();
 }
 
-// РЎСЂР°РІРЅРµРЅРёРµ. РС‚РµСЂР°С‚РѕСЂС‹ СЃС‡РёС‚Р°СЋС‚СЃСЏ СЌРєРІРёРІР°Р»РµРЅС‚РЅС‹РјРё РµСЃР»Рё РѕРґРЅРё СЃСЃС‹Р»Р°СЋС‚СЃСЏ РЅР° РѕРґРёРЅ Рё С‚РѕС‚ Р¶Рµ СЌР»РµРјРµРЅС‚.
-// РЎСЂР°РІРЅРµРЅРёРµ СЃ РЅРµРІР°Р»РёРґРЅС‹Рј РёС‚РµСЂР°С‚РѕСЂРѕРј РЅРµ РѕРїСЂРµРґРµР»РµРЅРѕ.
-// РЎСЂР°РІРЅРµРЅРёРµ РёС‚РµСЂР°С‚РѕСЂРѕРІ РґРІСѓС… СЂР°Р·РЅС‹С… РєРѕРЅС‚РµР№РЅРµСЂРѕРІ РЅРµ РѕРїСЂРµРґРµР»РµРЅРѕ.
+// Сравнение. Итераторы считаются эквивалентными если одни ссылаются на один и тот же элемент.
+// Сравнение с невалидным итератором не определено.
+// Сравнение итераторов двух разных контейнеров не определено.
 bool operator==(persistent_set::iterator u, persistent_set::iterator v) {
-    return u.value == v.value && u.version_root == v.version_root;
+	return u.value == v.value && u.version_root == v.version_root;
 }
 bool operator!=(persistent_set::iterator u, persistent_set::iterator v) {
-    return u.value != v.value || u.version_root != v.version_root;
+	return u.value != v.value || u.version_root != v.version_root;
 }
 
 persistent_set::node* persistent_set::node::get_min() {
-    assert(this != nullptr);
-    node* use = this;
-    while (use -> left != nullptr) {
-        use = use->left;
-    }
-    return use;
+	assert(this != nullptr);
+	node* use = this;
+	while (use->left != nullptr) {
+		use = use->left;
+	}
+	return use;
 }
 
 persistent_set::node* persistent_set::node::get_max() {
-    assert(this != nullptr);
-    node* use = this;
-    while (use -> right != nullptr) {
-        use = use -> right;
-    }
-    return use;
+	assert(this != nullptr);
+	node* use = this;
+	while (use->right != nullptr) {
+		use = use->right;
+	}
+	return use;
 }
 
 
-// РџРµСЂРµС…РѕРґ Рє СЌР»РµРјРµРЅС‚Сѓ СЃРѕ СЃР»РµРґСѓСЋС‰РёРј РїРѕ РІРµР»РёС‡РёРЅРµ РєР»СЋС‡РѕРј.
-// РРЅРєСЂРµРјРµРЅС‚ РёС‚РµСЂР°С‚РѕСЂР° end() РЅРµРѕРїСЂРµРґРµР»РµРЅ.
-// РРЅРєСЂРµРјРµРЅС‚ РЅРµРІР°Р»РёРґРЅРѕРіРѕ РёС‚РµСЂР°С‚РѕСЂР° РЅРµРѕРїСЂРµРґРµР»РµРЅ.
+// Переход к элементу со следующим по величине ключом.
+// Инкремент итератора end() неопределен.
+// Инкремент невалидного итератора неопределен.
 persistent_set::iterator& persistent_set::iterator::operator++() {
-    if (value->right != nullptr) {
-        value = value->right->get_min();
-        return *this;
-    }
-    node* r = version_root;
-    std::vector<node*> parent;
-    while (r->right != value && r->left != value) {
-        parent.push_back(r);
-        if (r->get_value() < value->get_value()) {
-            r = r->right;
-        } else {
-            r = r->left;
-        }
-    }
-    parent.push_back(r);
-    while (parent.back()->right == value) {
-        value = parent.back();
-        parent.pop_back();
-    }
-    value = parent.back();
-    return *this;
+	if (value->right != nullptr) {
+		value = value->right->get_min();
+		return *this;
+	}
+	node* r = version_root;
+	std::vector<node*> parent;
+	while (r->right != value && r->left != value) {
+		parent.push_back(r);
+		if (r->get_value() < value->get_value()) {
+			r = r->right;
+		}
+		else {
+			r = r->left;
+		}
+	}
+	parent.push_back(r);
+	while (parent.back()->right == value) {
+		value = parent.back();
+		parent.pop_back();
+	}
+	value = parent.back();
+	return *this;
 }
 persistent_set::iterator persistent_set::iterator::operator++(int) {
-    assert(value != nullptr);
-    iterator ans(value, version_root);
-    iterator me = *this;
-    *this = ++me;
-    return ans;
+	assert(value != nullptr);
+	iterator ans(value, version_root);
+	iterator me = *this;
+	*this = ++me;
+	return ans;
 }
 
-// РџРµСЂРµС…РѕРґ Рє СЌР»РµРјРµРЅС‚Сѓ СЃРѕ СЃР»РµРґСѓСЋС‰РёРј РїРѕ РІРµР»РёС‡РёРЅРµ РєР»СЋС‡РѕРј.
-// Р”РµРєСЂРµРјРµРЅС‚ РёС‚РµСЂР°С‚РѕСЂР° begin() РЅРµРѕРїСЂРµРґРµР»РµРЅ.
-// Р”РµРєСЂРµРјРµРЅС‚ РЅРµРІР°Р»РёРґРЅРѕРіРѕ РёС‚РµСЂР°С‚РѕСЂР° РЅРµРѕРїСЂРµРґРµР»РµРЅ.
+// Переход к элементу со следующим по величине ключом.
+// Декремент итератора begin() неопределен.
+// Декремент невалидного итератора неопределен.
 persistent_set::iterator& persistent_set::iterator::operator--() {
-    if (value -> left != nullptr) {
-        value = value->left->get_max();
-        return *this;
-    }
-    node* r = version_root;
-    std::vector<node*> parent;
-    while (r->right != value && r->left != value) {
-        parent.push_back(r);
-        if (r->get_value() < value->get_value()) {
-            r = r->right;
-        } else {
-            r = r->left;
-        }
-    }
-    parent.push_back(r);
-    while (parent.back()->left == value) {
-        value = parent.back();
-        parent.pop_back();
-    }
-    value = parent.back();
-    return *this;
+	if (value->left != nullptr) {
+		value = value->left->get_max();
+		return *this;
+	}
+	node* r = version_root;
+	std::vector<node*> parent;
+	while (r->right != value && r->left != value) {
+		parent.push_back(r);
+		if (r->get_value() < value->get_value()) {
+			r = r->right;
+		}
+		else {
+			r = r->left;
+		}
+	}
+	parent.push_back(r);
+	while (parent.back()->left == value) {
+		value = parent.back();
+		parent.pop_back();
+	}
+	value = parent.back();
+	return *this;
 }
 persistent_set::iterator persistent_set::iterator::operator--(int) {
-    assert(value != nullptr);
-    iterator ans(value, version_root);
-    iterator me = *this;
-    *this = --me;
-    return ans;
+	assert(value != nullptr);
+	iterator ans(value, version_root);
+	iterator me = *this;
+	*this = --me;
+	return ans;
 }
 
 void persistent_set::print() {
-    node::print_node(root);
-    std::cout << std::endl;
+	node::print_node(root);
+	std::cout << std::endl;
 }
 
 void persistent_set::node::print_node(node* v) {
-    if (v == nullptr)
-        return;
-    std::cout << '(';
-    print_node(v->left);
-    std::cout << v->get_value();
-    print_node(v->right);
-    std::cout << ')';
+	if (v == nullptr)
+		return;
+	std::cout << '(';
+	print_node(v->left);
+	std::cout << v->get_value();
+	print_node(v->right);
+	std::cout << ')';
 }
 
 // Testing part
 int main() {
-    int a[6] = {2, 5, 3, 7, 1, 9};
-    persistent_set me;
-    for (int i : a) {
-        me.insert(i);
-    }
-    me.print();
-    persistent_set::iterator ex = me.end();
-    std::cout << *(ex) << std::endl;
-    while (ex != me.begin()) {
-        std::cout << *(ex--) << std::endl;
-    }
-    for (int i : a) {
-        me.erase(me.find(i));
-        me.print();
-    }
-/*    for (int i : a) {
-        me.erase(me.find(i));
-        ex = me.begin();
-        std::cout << *ex << std::endl;
-    }
-  */  return 0;
+	int a[6] = { 2, 5, 3, 7, 1, 9 };
+	persistent_set me;
+	for (int i : a) {
+		me.insert(i);
+	}
+	me.print();
+	persistent_set::iterator ex = me.end();
+	std::cout << *(ex) << std::endl;
+	while (ex != me.begin()) {
+		std::cout << *(ex--) << std::endl;
+	}
+	for (int i : a) {
+		me.erase(me.find(i));
+		me.print();
+	}
+	/*    for (int i : a) {
+	me.erase(me.find(i));
+	ex = me.begin();
+	std::cout << *ex << std::endl;
+	}
+	*/  return 0;
 }
