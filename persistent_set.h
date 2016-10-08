@@ -2,12 +2,13 @@
 // Created by Anna Kopeliovich(annnufan@gmail.com, nufan@list.ru) on 04.10.2016.
 //
 
+#pragma once
+
 #ifndef PERSISTENT_SET_PERSISTENT_SET_H
 #define PERSISTENT_SET_PERSISTENT_SET_H
 
 #include <utility>
 #include <vector>
-#include <memory>
 
 typedef int value_type;
 
@@ -59,39 +60,45 @@ private:
     //структура, в которой будут храниться значения, и ссылки на которую будет хранить наше дерево
     struct node;
     //ссылка на наш корень, за который всё подвешено
-    std::shared_ptr<node> root;
-    //список всех итераторов данного set
-
-    std::shared_ptr<node> insert_value(std::shared_ptr<node>, std::shared_ptr<node>);
-    std::shared_ptr<node> erase_value(std::shared_ptr<node>, std::shared_ptr<node>);
-    std::shared_ptr<node> simple_deleted(std::shared_ptr<node>);
-    std::vector<std::shared_ptr<node>> old_root;
+    node* root;
+    node* insert_value(node*, node*);
+    node* erase_value(node*, node*);
+    node* simple_deleted(node*);
 };
 
-struct persistent_set::node : std::enable_shared_from_this<node>{
+struct persistent_set::node {
     node();
-    node(value_type, std::shared_ptr<node> = std::shared_ptr<node>(), std::shared_ptr<node> = std::shared_ptr<node>());
-
+    node(value_type, node* = nullptr, node* = nullptr);
+    //уменьшает число ссылок на нее
+    //если ссылок 0, вершина удаляется
+    void dec_node();
+    //увеличивает число ссылок на нее
+    void add();
     //посмотреть значение в this
     value_type& get_value();
     //левый и правый соседи вершинки
-    std::shared_ptr<node> left;
-    std::shared_ptr<node> right;
+    node* left;
+    node* right;
 
     //минимальный и максимальный элементы в нашем поддереве
-    std::shared_ptr<node> get_min();
-    std::shared_ptr<node> get_max();
-    static void print_node(std::shared_ptr<node>);
+    node* get_min();
+    node* get_max();
+    static void print_node(persistent_set::node*);
+
+
     bool valid;
 private:
     //значение в this вершине
     value_type value;
+
+    //счетчик ссылок на вершину
+    int count = 0;
 };
 
 struct persistent_set::iterator {
     //конструктор по умолчанию и конструктор от ссылки на определенную node
     iterator();
-    iterator(std::shared_ptr<node>, std::shared_ptr<node>);
+    iterator(node*, node*);
 
     // Элемент на который сейчас ссылается итератор.
     // Разыменование итератора end() неопределено.
@@ -111,8 +118,8 @@ struct persistent_set::iterator {
     iterator operator--(int);
 
 
-    std::shared_ptr<node> value;
-    std::shared_ptr<node> version_root;
+    node* value;
+    node* version_root;
 };
 
 // Сравнение. Итераторы считаются эквивалентными если одни ссылаются на один и тот же элемент.
