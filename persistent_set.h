@@ -2,8 +2,6 @@
 // Created by Anna Kopeliovich(annnufan@gmail.com, nufan@list.ru) on 04.10.2016.
 //
 
-#pragma once
-
 #ifndef PERSISTENT_SET_PERSISTENT_SET_H
 #define PERSISTENT_SET_PERSISTENT_SET_H
 
@@ -61,9 +59,14 @@ private:
     struct node;
     //ссылка на наш корень, за который всё подвешено
     node* root;
+    //список всех итераторов данного set
+    std::vector<iterator*> list_of_iterator;
+
     node* insert_value(node*, node*);
     node* erase_value(node*, node*);
     node* simple_deleted(node*);
+    //функция, инфалидирующая все итераторы this
+    void invalidate_all_iterators();
 };
 
 struct persistent_set::node {
@@ -85,14 +88,12 @@ struct persistent_set::node {
     node* get_max();
     static void print_node(persistent_set::node*);
 
-
-    bool valid;
 private:
     //значение в this вершине
     value_type value;
 
-    //счетчик ссылок на вершину
-    int count = 0;
+	//������� ������ �� �������
+	int count = 0;
 };
 
 struct persistent_set::iterator {
