@@ -10,13 +10,13 @@ place_holder<0> _1;
 place_holder<1> _2;
 place_holder<2> _3;
 
-template <size_t... SIZE>
+template <size_t... N>
 struct range_t {};
 
-template <size_t... SIZE, size_t... Curr>
+template <size_t N, size_t... Curr>
 struct range_builder{
-	typedef typename range_builder<SIZE - 1, SIZE - 1, Curr...>::range range;
-}
+	typedef typename range_builder<N - 1, N - 1, Curr...>::range range;
+};
 
 template <size_t... Curr>
 struct range_builder<0, Curr...> {
@@ -27,7 +27,7 @@ struct range_builder<0, Curr...> {
 template<typename F, typename... Args>
 struct bind_t {
 
-	bind_t(F &&func, Args &&...args) : func(std::forward<F>(func)), arguments(std::forward<Args>(args)...) {}
+	bind_t(F &&func, Args &&..._args) : func(std::forward<F>(func)), args(std::forward<Args>(_args)...) {}
 
 	template <typename... Func_args>
 	auto operator()(Func_args &&...args) const {
