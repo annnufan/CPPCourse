@@ -13,7 +13,6 @@ struct shared_data {
 	shared_data(shared_data const &other);
 
 	void make_unique();
-	~shared_data();
 };
 
 

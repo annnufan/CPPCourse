@@ -11,10 +11,6 @@ void shared_data::make_unique() {
 		this->value = std::make_shared<std::vector<int>>(*this->value);
 }
 
-shared_data::~shared_data() {
-    // std::cout << "I'm delete " <<  std::endl;
-}
-
 optimized_vector::optimized_vector() {
 	is_small = true;
 	is_empty = true;
