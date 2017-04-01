@@ -33,6 +33,8 @@ optimized_vector::optimized_vector(optimized_vector const& other) {
 }
 
 optimized_vector& optimized_vector::operator=(optimized_vector const& other) {
+	if (*this == other)
+		return *this;
 	if (!is_small) {
 		delete big_data;
 	}
