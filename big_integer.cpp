@@ -550,7 +550,10 @@ void stamp( const char *s = "" ) {
 **/
 
 int main() {
-	std::string x = "1", y = "1";
+	// std::string x = "1", y = "1";
+	big_integer a = std::numeric_limits<int>::min();
+    assert((a / a) == (a / std::numeric_limits<int>::min()));
+
 	//  int N, M;
 	//  std::cin >> N >> M;
 	//  stamp("start");

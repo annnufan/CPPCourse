@@ -12,8 +12,7 @@ void shared_data::make_unique() {
 }
 
 shared_data::~shared_data() {
-	if (value != nullptr)
-		delete value;
+    // std::cout << "I'm delete " <<  std::endl;
 }
 
 optimized_vector::optimized_vector() {
@@ -238,8 +237,8 @@ void optimized_vector::erase_begin(std::size_t count) {
 }
 
 optimized_vector::~optimized_vector(){
-	//if (!is_small)
-	delete big_data;
+	if (!is_small)
+	    delete big_data;
 }
 
 void optimized_vector::make_unique(){
