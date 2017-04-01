@@ -227,14 +227,11 @@ TEST(correctness, div_int_min)
 
 TEST(correctness, div_int_min_2)
 {
-	std::cout << ":( ";
     big_integer a = std::numeric_limits<int>::min();
     big_integer b = -1;
     big_integer c = a / b;
     EXPECT_TRUE(c == (a / -1));
     EXPECT_TRUE((c - std::numeric_limits<int>::max()) == 1);
-    std::cout << " :)" << std::endl;
-
 }
 
 TEST(correctness, div_signed)

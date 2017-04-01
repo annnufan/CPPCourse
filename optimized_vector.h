@@ -3,6 +3,17 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
+
+struct shared_data {
+	std::shared_ptr<std::vector<int>> value;
+
+	shared_data();
+
+	shared_data(shared_data const &other);
+
+	void make_unique();
+};
 
 
 struct optimized_vector {
@@ -21,11 +32,9 @@ struct optimized_vector {
     void resize(std::size_t count);
     void resize (std::size_t n, const int& val);
 
-    void insert_begin(optimized_vector other);
+    void insert_begin(optimized_vector const& other);
 
 	void erase_begin(std::size_t count);
-
-	void clear();
 
 	std::size_t size() const;
 
@@ -39,17 +48,21 @@ struct optimized_vector {
 	int& operator[] (std::size_t n);
 	const int& operator[] (std::size_t n) const;
 
+	friend std::ostream& operator<<(std::ostream& s, optimized_vector const& a); 
+
 private:
 	bool is_small, is_empty;
-
-	int small_data;
-
-	std::shared_ptr<std::vector<int>> *big_data;
+	union {
+		int small_data;
+		shared_data *big_data;
+	};
 
 	void make_unique();
 };
 
 bool operator==(optimized_vector const& a, optimized_vector const& b);
 bool operator!=(optimized_vector const& a, optimized_vector const& b);
+
+std::ostream& operator<<(std::ostream& s, optimized_vector const& a);
 
 #endif // OPTIMIZED_VECTOR_H
