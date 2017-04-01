@@ -249,14 +249,9 @@ big_integer& big_integer::operator+=(big_integer const& rhs) {
 		return *this;	
 	}
 	if (comp(rhs)) {
-
-		// std::cout << "ERR\n"; 
-		// std::cout << rhs << std::endl;
 		big_integer me = *this;      
 		*this = rhs;
-		// std::cout << *this << std::end
 		sub(me);
-		// std::cout << *this << std::endl;
 		return *this;
 	}
 	sub(rhs);
@@ -264,10 +259,7 @@ big_integer& big_integer::operator+=(big_integer const& rhs) {
 }
 
 big_integer& big_integer::operator-=(big_integer const& rhs) {
-	// std::cout << *this;
-	// std::cout << ' ' << rhs;
 	big_integer minus_rhs = -rhs;
-	// std::cout << ' ' << minus_rhs << std::endl;
 	return *this += minus_rhs;
 }
 
@@ -395,7 +387,6 @@ big_integer big_integer::operator-() const{
 	if (*this == ZERO) {
 		return big_integer(ZERO);
 	}
-	// std::cout << *this << std::endl;
     return big_integer(dig, sign ^ 1);
 }
 
@@ -405,9 +396,6 @@ big_integer big_integer::operator~() const{
 	x.sign ^= 1;
 	return x;		
 }
-
-
-
 
 
 big_integer& big_integer::operator++() {
@@ -511,9 +499,6 @@ big_integer operator>>(big_integer a, int b)
     return a >>= b;
 } 
 
-
-
-
 std::string to_string(big_integer a) {
 	std::string s = "", h = "";
 	if (a == big_integer::ZERO) {
@@ -564,105 +549,30 @@ void stamp( const char *s = "" ) {
 
 **/
 
-unsigned const number_of_iterations = 10;
-size_t const number_of_multipliers = 6;
-
-template <typename T>
-void erase_unordered(std::vector<T>& v, typename std::vector<T>::iterator pos)
-{
-    std::swap(v.back(), *pos);
-    v.pop_back();
-}
-
-template <typename T>
-T extract_random_element(std::vector<T>& v)
-{
-    size_t index = rand() % v.size();
-    T copy = v[index];
-    erase_unordered(v, v.begin() + index);
-    return copy;
-}
-
-template <typename T>
-void merge_two(std::vector<T>& v)
-{
-    assert(v.size() >= 2);
-
-    T a = extract_random_element(v);
-    T b = extract_random_element(v);
-
-    T ab = a * b;
-    assert(ab / a == b);
-    assert(ab / b == a);
-
-    v.push_back(ab);
-}
-
-template <typename T>
-T merge_all(std::vector<T> v)
-{
-    assert(!v.empty());
-
-    while (v.size() >= 2)
-        merge_two(v);
-
-    return v[0];
-}
-
-int myrand()
-{
-    int val = rand() - RAND_MAX / 2;
-    if (val != 0)
-        return val;
-    else
-        return 1;
-}
-
-
 int main() {
-//	 {
-//	 	int a = std::numeric_limits<int>::min(), b = 37;
-//	 	std::cout << a * b << std::endl;
-//	 	big_integer x(a), y(b);
-//	 	std::cout << x*y << std::endl;
-//	 	std::cout << big_integer(a * b) / big_integer(b) << std::endl;
-//	 }
-	{
-    	for (unsigned itn = 0; itn != number_of_iterations; ++itn)
-	    {
-	        std::vector<big_integer> x;
-	        for (size_t i = 0; i != number_of_multipliers; ++i)
-	            x.push_back(myrand());
-
-	        big_integer a = merge_all(x);
-	        big_integer b = merge_all(x);
-
-	        assert(a == b);
-	    }
-	}
-//	std::string x = "1", y = "1";
-//	 int N, M;
-//	 std::cin >> N >> M;
-//	 stamp("start");
-//	 for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
-//	 for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
-//	 stamp("gen");
-//	 big_integer a(x), b(y), c;
-//	 stamp("convert");
-//	 c = a * b;
-//	 stamp("mul");
-//	 assert(c / b == a);
-//	 stamp("div");
-//	std::string x = "1", y = "1";
-//	int N;
-//	std::cin >> N;
-//	stamp("start");
-//	for (int i = 0; i < N; i++) {
-//		x += (char)(i % 7 + '0');
-//		y += (char)(i % 5 + '0');
-//		big_integer a(x), b(y), c;
-//		c = a * b;
-//		assert(c / b == a);
-//	}
+	std::string x = "1", y = "1";
+	//  int N, M;
+	//  std::cin >> N >> M;
+	//  stamp("start");
+	//  for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
+	//  for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
+	//  stamp("gen");
+	//  big_integer a(x), b(y), c;
+	//  stamp("convert");
+	//  c = a * b;
+	//  stamp("mul");
+	//  assert(c / b == a);
+	//  stamp("div");
+	// std::string x = "1", y = "1";
+	// int N;
+	// std::cin >> N;
+	// stamp("start");
+	// for (int i = 0; i < N; i++) {
+	// 	x += (char)(i % 7 + '0');
+	// 	y += (char)(i % 5 + '0');
+	// 	big_integer a(x), b(y), c;
+	// 	c = a * b;
+	// 	assert(c / b == a);
+	// }
 }
 #endif

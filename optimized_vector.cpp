@@ -2,13 +2,18 @@
 
 #include <cassert>
 
-shared_data::shared_data() : value(std::make_shared<std::vector<int>>(*(new std::vector<int>))) {}
+shared_data::shared_data() : value(std::make_shared<std::vector<int>>()) {}
 
 shared_data::shared_data(shared_data const &other) : value(other.value) {}
 
 void shared_data::make_unique() {
 	if (!this->value.unique())
 		this->value = std::make_shared<std::vector<int>>(*this->value);
+}
+
+shared_data::~shared_data() {
+	if (value != nullptr)
+		delete value;
 }
 
 optimized_vector::optimized_vector() {
@@ -233,8 +238,8 @@ void optimized_vector::erase_begin(std::size_t count) {
 }
 
 optimized_vector::~optimized_vector(){
-	if (!is_small)
-		delete big_data;
+	//if (!is_small)
+	delete big_data;
 }
 
 void optimized_vector::make_unique(){

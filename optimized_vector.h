@@ -13,6 +13,7 @@ struct shared_data {
 	shared_data(shared_data const &other);
 
 	void make_unique();
+	~shared_data();
 };
 
 
@@ -52,10 +53,10 @@ struct optimized_vector {
 
 private:
 	bool is_small, is_empty;
-	union {
+	// union {
 		int small_data;
 		shared_data *big_data;
-	};
+	// };
 
 	void make_unique();
 };
