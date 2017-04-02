@@ -9,11 +9,6 @@
 #include <iostream>
 #include <algorithm>
 
-
-#include <cstdlib>
-#include <vector>
-#include <utility>
-
 const int RADIX_LEN = 30;
 const int RADIX = 1<<RADIX_LEN;
 
@@ -173,7 +168,7 @@ big_integer big_integer::divide(big_integer const& rhs) {
 		return divide(rhs.dig[0]);	
 	}
 	big_integer k, q;
-	k.dig.resize(dig.size(), 0);
+	k.dig.resize(dig.size());
 	int j = RADIX_LEN*dig.size() - 1;
 	for (int w = dig.size() - 1; w >= 0; w--) {
 		for (int i = RADIX_LEN - 1; i >= 0; i--, j--) {
@@ -193,13 +188,16 @@ big_integer big_integer::divide(big_integer const& rhs) {
 
 
 
-big_integer::big_integer(big_integer const& other) : dig(other.dig), sign(other.sign) {
+big_integer::big_integer(big_integer const& other) {
+	sign = other.sign;
+	for (size_t i = 0; i < other.dig.size(); i++) {
+		dig.push_back(other.dig[i]);
+	}
 	delete_zero();
-	//zeros really should be deleted here 
 }
 
 
-big_integer::big_integer(optimized_vector d, int s) : dig(d), sign(s) {}
+big_integer::big_integer(std::vector<int> d, int s) : dig(d), sign(s) {}
  
 big_integer::big_integer(int a) {
 	sign = 1;
@@ -209,6 +207,7 @@ big_integer::big_integer(int a) {
 		aa = -aa;
 	}
 	if (aa < RADIX) {
+		dig.clear();
 		dig.push_back(aa);
 	} else {
 		while (aa > 0) {
@@ -223,7 +222,7 @@ big_integer::big_integer(std::string const& str) {
 	if (str[0] == '-') {
 		s = 0;	
 	}
-	dig.resize(1, 0);
+	dig.resize(1);
 	for (int i = 1 - s; i < (int)str.length(); i++) {
 		if (str[i] < '0' || str[i] > '9') {
 			 throw std::runtime_error("invalid string");	
@@ -239,6 +238,9 @@ big_integer::big_integer(std::string const& str) {
 big_integer& big_integer::operator=(big_integer const& other) {
 	sign = other.sign;
 	dig = other.dig;
+
+	// dig.resize(other.dig.size());
+	// std::copy(other.dig.begin(), other.dig.end(), dig.begin());
 	return *this;		
 }
 
@@ -259,8 +261,7 @@ big_integer& big_integer::operator+=(big_integer const& rhs) {
 }
 
 big_integer& big_integer::operator-=(big_integer const& rhs) {
-	big_integer minus_rhs = -rhs;
-	return *this += minus_rhs;
+	return *this += -rhs;	
 }
 
 big_integer& big_integer::operator*=(big_integer const& rhs) {
@@ -352,9 +353,9 @@ big_integer& big_integer::operator^=(big_integer const& rhs) {
 
 big_integer& big_integer::operator<<=(int rhs) {
 	int k  = rhs / RADIX_LEN;
-	optimized_vector a;
-	a.resize(k, 0);
-	// dig.insert_begin(a);
+	std::vector<int> a;
+	a.resize(k);
+//	dig.insert_begin(a);
 	dig.insert(dig.begin(), a.begin(), a.end());
 	rhs %= RADIX_LEN;
 	mul(1 << rhs);
@@ -364,9 +365,9 @@ big_integer& big_integer::operator<<=(int rhs) {
 big_integer& big_integer::operator >>=(int rhs) {
 	int k = std::min(rhs / RADIX_LEN, (int)dig.size());
 	dig.erase(dig.begin(), dig.begin() + k);
-	// dig.erase_begin(k);
+	//dig.erase_begin(k);
 	if (!dig.size()) {
-		dig.resize(1, 0);
+		dig.resize(1);
 	}
 	rhs %= RADIX_LEN;
 	int o = dig[0] & ((1 << rhs)-1); 
@@ -396,6 +397,9 @@ big_integer big_integer::operator~() const{
 	x.sign ^= 1;
 	return x;		
 }
+
+
+
 
 
 big_integer& big_integer::operator++() {
@@ -499,6 +503,9 @@ big_integer operator>>(big_integer a, int b)
     return a >>= b;
 } 
 
+
+
+
 std::string to_string(big_integer a) {
 	std::string s = "", h = "";
 	if (a == big_integer::ZERO) {
@@ -548,34 +555,45 @@ void stamp( const char *s = "" ) {
 }
 
 **/
-
 int main() {
-	// std::string x = "1", y = "1";
-	big_integer a = std::numeric_limits<int>::min();
-    assert((a / a) == (a / std::numeric_limits<int>::min()));
-
-	//  int N, M;
-	//  std::cin >> N >> M;
-	//  stamp("start");
-	//  for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
-	//  for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
-	//  stamp("gen");
-	//  big_integer a(x), b(y), c;
-	//  stamp("convert");
-	//  c = a * b;
-	//  stamp("mul");
-	//  assert(c / b == a);
-	//  stamp("div");
-	// std::string x = "1", y = "1";
-	// int N;
-	// std::cin >> N;
+	{
+		int a = 123457, b = 37;
+		std::cout << a * b << std::endl;
+		big_integer x(a), y(b);
+		std::cout << x*y << std::endl;
+		std::cout << big_integer(a * b) / big_integer(b) << std::endl;
+	}
+	{
+		big_integer a = std::numeric_limits<int>::min();
+		big_integer b = -1;
+		big_integer c = a / b;
+		std::cout << a << " / " << b <<  " = " << c << std::endl;
+		assert(c == (a / -1));
+		assert((c - std::numeric_limits<int>::max()) == 1);
+ 	}
+	std::string x = "1", y = "1";
+	// int N, M;
+	// std::cin >> N >> M;
 	// stamp("start");
-	// for (int i = 0; i < N; i++) {
-	// 	x += (char)(i % 7 + '0');
-	// 	y += (char)(i % 5 + '0');
-	// 	big_integer a(x), b(y), c;
-	// 	c = a * b;
-	// 	assert(c / b == a);
-	// }
+	// for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
+	// for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
+	// stamp("gen");
+	// big_integer a(x), b(y), c;
+	// stamp("convert");
+	// c = a * b;
+	// stamp("mul");
+	// assert(c / b == a);
+	// stamp("div");
+	/*std::string x = "1", y = "1";
+	int N;
+	std::cin >> N;
+	stamp("start");
+	for (int i = 0; i < N; i++) { 
+		x += (char)(i % 7 + '0');
+		y += (char)(i % 5 + '0');
+		big_integer a(x), b(y), c;
+		c = a * b;
+		assert(c / b == a);
+	}*/
 }
 #endif

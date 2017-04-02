@@ -8,18 +8,15 @@
 #include <stdexcept>
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
-
-#include <cstdlib>
-#include <vector>
-#include <utility>
 
 const int RADIX_LEN = 30;
 const int RADIX = 1<<RADIX_LEN;
 
 big_integer big_integer::ZERO(0);
 
-void big_integer::delete_zero() {	
+void big_integer::delete_zero() {
 	while(dig.size() > 1U && dig.back() == 0) {
 		dig.pop_back();	
 	}
@@ -173,7 +170,7 @@ big_integer big_integer::divide(big_integer const& rhs) {
 		return divide(rhs.dig[0]);	
 	}
 	big_integer k, q;
-	k.dig.resize(dig.size(), 0);
+	k.dig.resize(dig.size());
 	int j = RADIX_LEN*dig.size() - 1;
 	for (int w = dig.size() - 1; w >= 0; w--) {
 		for (int i = RADIX_LEN - 1; i >= 0; i--, j--) {
@@ -193,14 +190,12 @@ big_integer big_integer::divide(big_integer const& rhs) {
 
 
 
-big_integer::big_integer(big_integer const& other) : dig(other.dig), sign(other.sign) {
-	delete_zero();
-	//zeros really should be deleted here 
+big_integer::big_integer(big_integer const& other) {
+	sign = other.sign;
+	dig = other.dig;
 }
 
 
-big_integer::big_integer(optimized_vector d, int s) : dig(d), sign(s) {}
- 
 big_integer::big_integer(int a) {
 	sign = 1;
 	long long aa = a;
@@ -209,7 +204,8 @@ big_integer::big_integer(int a) {
 		aa = -aa;
 	}
 	if (aa < RADIX) {
-		dig.push_back(aa);
+		dig.resize(1);
+		dig[0] = aa;
 	} else {
 		while (aa > 0) {
 			dig.push_back(aa % RADIX);
@@ -218,12 +214,15 @@ big_integer::big_integer(int a) {
 	}
 }
 
+big_integer::big_integer(my_vector d, int s):dig(d), sign(s) {}
+
+
 big_integer::big_integer(std::string const& str) {
 	int s = 1;
 	if (str[0] == '-') {
 		s = 0;	
 	}
-	dig.resize(1, 0);
+	dig.resize(1);
 	for (int i = 1 - s; i < (int)str.length(); i++) {
 		if (str[i] < '0' || str[i] > '9') {
 			 throw std::runtime_error("invalid string");	
@@ -259,8 +258,7 @@ big_integer& big_integer::operator+=(big_integer const& rhs) {
 }
 
 big_integer& big_integer::operator-=(big_integer const& rhs) {
-	big_integer minus_rhs = -rhs;
-	return *this += minus_rhs;
+	return *this += -rhs;	
 }
 
 big_integer& big_integer::operator*=(big_integer const& rhs) {
@@ -352,10 +350,9 @@ big_integer& big_integer::operator^=(big_integer const& rhs) {
 
 big_integer& big_integer::operator<<=(int rhs) {
 	int k  = rhs / RADIX_LEN;
-	optimized_vector a;
-	a.resize(k, 0);
-	// dig.insert_begin(a);
-	dig.insert(dig.begin(), a.begin(), a.end());
+	my_vector a;
+	a.resize(k);
+	dig.insert_to_begin(a.begin(), k);
 	rhs %= RADIX_LEN;
 	mul(1 << rhs);
 	return *this;
@@ -363,10 +360,9 @@ big_integer& big_integer::operator<<=(int rhs) {
 
 big_integer& big_integer::operator >>=(int rhs) {
 	int k = std::min(rhs / RADIX_LEN, (int)dig.size());
-	dig.erase(dig.begin(), dig.begin() + k);
-	// dig.erase_begin(k);
+	dig.erase_pref(k);
 	if (!dig.size()) {
-		dig.resize(1, 0);
+		dig.resize(1);
 	}
 	rhs %= RADIX_LEN;
 	int o = dig[0] & ((1 << rhs)-1); 
@@ -396,6 +392,9 @@ big_integer big_integer::operator~() const{
 	x.sign ^= 1;
 	return x;		
 }
+
+
+
 
 
 big_integer& big_integer::operator++() {
@@ -499,6 +498,9 @@ big_integer operator>>(big_integer a, int b)
     return a >>= b;
 } 
 
+
+
+
 std::string to_string(big_integer a) {
 	std::string s = "", h = "";
 	if (a == big_integer::ZERO) {
@@ -507,7 +509,6 @@ std::string to_string(big_integer a) {
 	if (!a.sign) {
 		h = "-";	
 	}
-
 	while (a != big_integer::ZERO) {
 		int x = a.divide(10);
 		char c = x + '0';
@@ -518,7 +519,199 @@ std::string to_string(big_integer a) {
 
 std::ostream& operator<<(std::ostream& s, big_integer const& a) {
 	return s << to_string(a);
-}                          
+}            
+
+size_t const& big_integer::my_vector::size() const{
+	return my_size;
+}
+
+int& big_integer::my_vector::back() {
+	return head.get()[my_size - 1];	
+}
+
+const std::shared_ptr<int> big_integer::my_vector::begin() const{
+	return head;	
+}
+
+
+std::shared_ptr<int> big_integer::my_vector::begin() {
+	if (cow) {
+		std::shared_ptr<int> other (new int[my_size * 2]);
+		copy(head, other, my_size);
+		all_size = my_size * 2;
+		head = other;
+		cow = false;
+	}
+	return head;	
+}
+
+std::shared_ptr<int> big_integer::my_vector::erase_pref(int k) {
+	if (my_size - k == 1) {
+		x = head.get()[my_size - 1];
+		head = std::shared_ptr<int>(&x);
+		my_size = 1;
+		all_size = 1;
+		cow = false;
+		return head;	
+	}
+	
+	std::shared_ptr<int> other (new int[(my_size - k) * 2]);
+	copy(std::shared_ptr<int>(head.get() + k), other, my_size - k);
+	all_size = (my_size - k) * 2;
+	head = other;
+	cow = false;
+	return head;
+}
+
+std::shared_ptr<int> big_integer::my_vector::insert_to_begin(std::shared_ptr<int> start, int s) {
+	std::shared_ptr<int> other (new int[(my_size + s) * 2]);
+	copy(start, other, s);
+	copy(head, std::shared_ptr<int> (other.get() + s), my_size);
+	all_size = (my_size + s) * 2;
+	head = other;
+	cow = false;
+	return head;	
+}
+
+
+void big_integer::my_vector::pop_back() {
+	if (cow) {
+		std::shared_ptr<int> other (new int[my_size * 2]);
+		copy(head, other, my_size);
+		all_size = my_size * 2;
+		head = other;
+		cow = false;
+	}
+   	if (my_size == 1) {
+		x = 0;
+		return;
+	}
+	my_size--;
+	if (my_size == 1) {
+		x = head.get()[0];
+		head = std::shared_ptr<int>(&x);
+		my_size = 1;
+		all_size = 1;
+	}
+}
+
+void big_integer::my_vector::copy(std::shared_ptr<int> a, std::shared_ptr<int> b, size_t s) {
+	for (int i = 0; i < (int)s; i++) {
+		b.get()[i] = a.get()[i];
+	}
+}
+
+void big_integer::my_vector::resize(size_t s, int v) {
+	if (s <= my_size) {
+		my_size = s;
+		if (s == 1) {
+			x = head.get()[0];
+			head = std::shared_ptr<int>(&x);
+			my_size = 1;
+			all_size = 1;
+		}
+		return;
+	}
+	if (all_size >= s && !cow) {
+		for (int i = my_size; i < (int)s; i++) {
+			head.get()[i] = v;	
+		}
+		my_size = s;
+		return;				
+	}
+	std::shared_ptr<int> other (new int[s * 2]);
+	copy(head, other, my_size);
+	for (int i = my_size; i < (int)s; i++) {
+		other.get()[i] = v;	
+	}
+	my_size = s;
+	all_size = my_size * 2;
+	head = other;
+	cow = false;
+}
+
+void big_integer::my_vector::push_back(int a) {
+	if (all_size != my_size && !cow) {
+		head.get()[my_size] = a;
+		my_size++;
+		return;
+	}
+	std::shared_ptr<int> other(new int[all_size * 2]);
+	copy(head, other, my_size);
+	other.get()[my_size] = a;
+	all_size = my_size * 2;
+	my_size++;
+	head = other;
+	cow = false;
+}
+
+big_integer::my_vector::my_vector() {
+	cow = false;
+	all_size = 1;
+	my_size = 1;
+	head = std::shared_ptr<int>(&x);
+//	head.get()[0] = 0;
+	x = 0; 		
+}
+
+
+big_integer::my_vector::my_vector(my_vector const& other) {
+	cow = true;
+	all_size = other.all_size;
+	my_size = other.my_size;
+	head = other.head;
+	x = 0;	
+}
+big_integer::my_vector& big_integer::my_vector::operator=(my_vector const& other) {
+	cow = true;
+	all_size = other.all_size;
+	my_size = other.my_size;
+	head = other.head;
+	x = 0;	
+	return *this;		
+}
+
+bool operator==(big_integer::my_vector const& a, big_integer::my_vector const& b) {
+	if (a.size() == b.size()) {
+		for (int i = 0; i < (int)a.size(); i++) {
+			if (a[i] != b[i])
+				return false;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool operator!=(big_integer::my_vector const& a, big_integer::my_vector const& b) {
+	if (a.size() == b.size()) {
+		for (int i = 0; i < (int)a.size(); i++) {
+			if (a[i] != b[i])
+				return true;
+		}
+		return false;
+	}
+	return true;
+}
+
+
+int const& big_integer::my_vector::operator[](int ind) const{
+	return head.get()[ind];	
+}   
+
+
+
+int& big_integer::my_vector::operator[](int ind) {
+	if (cow) {
+		std::shared_ptr<int> other (new int[my_size * 2]);
+		copy(head, other, my_size);
+		all_size = my_size * 2;
+		head = other;
+		cow = false;
+	}
+	return head.get()[ind];
+}
+
+
 
 void stamp( const char *s = "" ) {
 	static double start = 0;
@@ -526,56 +719,34 @@ void stamp( const char *s = "" ) {
 	start = clock();
 }
 
-#ifndef FINAL_TESTING
-
-/**int main() {
-	freopen("in", "r", stdin);
-	int x;
-	std::cin >> x;
-	big_integer mulq[x], u(1);
-	for(int i = 0; i < x; i++) {
-		int y;
-		std::cin >> y;
-		mulq[i] = y;
-		u *= mulq[i];
-	}
-	for(int i = 1; i < x; i++) {
-		u /= mulq[i];
-	}
-	std::cout << u << ' ' << mulq[0] << std::endl;
-//	big_integer ab(a + b);
-//	std::cout << ab ; //<< " ab /  b = " << ab /  b << " ab /  a = " << ab / a;	
-}
-
-**/
-
 int main() {
-	// std::string x = "1", y = "1";
-	big_integer a = std::numeric_limits<int>::min();
-    assert((a / a) == (a / std::numeric_limits<int>::min()));
+	int a = 123457, b = 37;
+	std::cout << a * b << std::endl;
+	std::cout << big_integer(a) * big_integer(b) << std::endl;
+	std::cout << big_integer(a * b) / big_integer(b) << std::endl;
+/*	std::string x = "1", y = "1";
+	int N, M;
+	std::cin >> N >> M;
+	stamp("start");
+	for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
+	for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
+	stamp("gen");
+	big_integer a(x), b(y), c;
+	stamp("convert");
+	c = a * b;
+	stamp("mul");
+	assert(c / b == a);
+	stamp("div");
 
-	//  int N, M;
-	//  std::cin >> N >> M;
-	//  stamp("start");
-	//  for (int i = 0; i < N; i++) { x += (char)(i % 7 + '0');	}
-	//  for (int i = 0; i < M; i++) { y += (char)(i % 5 + '0');	}
-	//  stamp("gen");
-	//  big_integer a(x), b(y), c;
-	//  stamp("convert");
-	//  c = a * b;
-	//  stamp("mul");
-	//  assert(c / b == a);
-	//  stamp("div");
-	// std::string x = "1", y = "1";
-	// int N;
-	// std::cin >> N;
-	// stamp("start");
-	// for (int i = 0; i < N; i++) {
-	// 	x += (char)(i % 7 + '0');
-	// 	y += (char)(i % 5 + '0');
-	// 	big_integer a(x), b(y), c;
-	// 	c = a * b;
-	// 	assert(c / b == a);
-	// }
+	std::string x = "1", y = "1";
+	int N;
+	std::cin >> N;
+	stamp("start");
+	for (int i = 0; i < N; i++) { 
+		x += (char)(i % 7 + '0');
+		y += (char)(i % 5 + '0');
+		big_integer a(x), b(y), c;
+		c = a * b;
+		assert(c / b == a);
+	}  */
 }
-#endif
