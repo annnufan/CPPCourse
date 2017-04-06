@@ -20,11 +20,11 @@ int main() {
     } catch (char const * e) {
         std::cerr << e << std::endl;
     }
-    // try {
-    //     x* xxx = any_cast<x>(&b); //valid cast
-    // } catch (char const * e) {
-    //     std::cerr << e << std::endl;
-    // }
+     try {
+         x* xxx = any_cast<x>(&b); //valid cast
+     } catch (char const * e) {
+         std::cerr << e << std::endl;
+     }
     // try {
     //     int* t = any_cast<int>(&b); //invalid cast
     // } catch (char const * e) {

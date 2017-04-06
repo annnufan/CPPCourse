@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include <type_traits>
 #include <stdexcept>
+#include <iostream>
 
 struct any {
 public:
@@ -217,7 +218,7 @@ private:
 	template<typename ValType>
 	typename std::enable_if<is_small<ValType>::value>::type construct(ValType &&value) {
 		using Type = typename std::decay<ValType>::type;
-		base_holder holder = {
+		static base_holder holder = {
 			small_holder<Type>::type,
 			small_holder<Type>::destroy,
 			small_holder<Type>::copy,
@@ -225,14 +226,14 @@ private:
 			small_holder<Type>::swap
 		};
 		data = &holder;
-		new(&val.small_val) Type(std::forward<ValType>(value));
+		new(&val.big_val) Type(std::forward<ValType>(value));
 		state = SMALL;
 	}
 
 	template<typename ValType>
 	typename std::enable_if<!is_small<ValType>::value>::type construct(ValType &&value) {
 		using Type = typename std::decay<ValType>::type;
-		base_holder holder = {
+		static base_holder holder = {
 			big_holder<Type>::type,
 			big_holder<Type>::destroy,
 			big_holder<Type>::copy,
