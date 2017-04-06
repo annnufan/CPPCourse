@@ -1,0 +1,52 @@
+any-testing.cpp: In constructor 'x::x(int, int, int, int, int)':
+any-testing.cpp:9:42: warning: declaration of 'e' shadows a member of 'x' [-Wshadow]
+     x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
+                                          ^
+any-testing.cpp:8:21: note: shadowed declaration is here
+     int a, b, c, d, e;
+                     ^
+any-testing.cpp:9:42: warning: declaration of 'd' shadows a member of 'x' [-Wshadow]
+     x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
+                                          ^
+any-testing.cpp:8:18: note: shadowed declaration is here
+     int a, b, c, d, e;
+                  ^
+any-testing.cpp:9:42: warning: declaration of 'c' shadows a member of 'x' [-Wshadow]
+     x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
+                                          ^
+any-testing.cpp:8:15: note: shadowed declaration is here
+     int a, b, c, d, e;
+               ^
+any-testing.cpp:9:42: warning: declaration of 'b' shadows a member of 'x' [-Wshadow]
+     x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
+                                          ^
+any-testing.cpp:8:12: note: shadowed declaration is here
+     int a, b, c, d, e;
+            ^
+any-testing.cpp:9:42: warning: declaration of 'a' shadows a member of 'x' [-Wshadow]
+     x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
+                                          ^
+any-testing.cpp:8:9: note: shadowed declaration is here
+     int a, b, c, d, e;
+         ^
+any-testing.cpp: In function 'int main()':
+any-testing.cpp:19:14: warning: unused variable 'p' [-Wunused-variable]
+         int* p = any_cast<int>(&a); //valid cast
+              ^
+any-testing.cpp:24:12: warning: unused variable 'xxx' [-Wunused-variable]
+         x* xxx = any_cast<x>(&b); //valid cast
+            ^
+any-testing.cpp:29:14: warning: unused variable 't' [-Wunused-variable]
+         int* t = any_cast<int>(&b); //invalid cast
+              ^
+In file included from any-testing.cpp:5:0:
+any.h: In instantiation of 'CastType* any::cast() [with CastType = int]':
+any.h:257:30:   required from 'ValType* any_cast(any*) [with ValType = int]'
+any-testing.cpp:19:34:   required from here
+any.h:95:3: warning: enumeration value 'EMPTY' not handled in switch [-Wswitch]
+   switch (state) {
+   ^
+any.h: In instantiation of 'CastType* any::cast() [with CastType = x]':
+any.h:257:30:   required from 'ValType* any_cast(any*) [with ValType = x]'
+any-testing.cpp:24:32:   required from here
+any.h:95:3: warning: enumeration value 'EMPTY' not handled in switch [-Wswitch]
