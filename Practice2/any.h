@@ -263,17 +263,17 @@ ValType* any_cast(any *other) {
 
 template<class ValType>
 ValType any_cast(const any& other) {
-	return &other.cast<ValType>();
+	return *other.cast<ValType>();
 }
 
 template<class ValType>
 ValType any_cast(any& other) {
-	return &other.cast<ValType>();
+	return *other.cast<ValType>();
 }
 
 template<class ValType>
 ValType any_cast(any&& other) {
-	return &other.cast<ValType>();
+	return *other.cast<ValType>();
 }
 
 #endif // BIND_H
