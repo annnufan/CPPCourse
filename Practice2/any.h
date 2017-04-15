@@ -10,14 +10,12 @@ struct any {
 public:
 	any() : state(EMPTY), data(nullptr) {}
 
-	template<>
-	any(const any &other) : state(other.state), data(other.data) {
+	any(any const &other) : state(other.state), data(other.data) {
 		if (!other.empty()) {
 			other.data -> copy(other.val, val);
 		}
 	}
 
-	template<>
 	any(any && other) : state(other.state), data(other.data) {
 		if (!other.empty()) {
 			other.data -> move(other.val, val);
@@ -26,7 +24,7 @@ public:
 	}
 
 	template <typename ValType>
-	any(const ValType &other) {
+	any(ValType const  &other) {
 		construct(other);
 	}
 
