@@ -8,15 +8,15 @@
 
 struct any {
 public:
-	any() : data(nullptr), state(EMPTY) {}
+	any() : state(EMPTY), data(nullptr) {}
 
-	any(const any &other) : data(other.data), state(other.state) {
+	any(const any &other) : state(other.state), data(other.data) {
 		if (!other.empty()) {
 			other.data -> copy(other.val, val);
 		}
 	}
 
-	any(any && other) : data(other.data), state(other.state) {
+	any(any && other) : state(other.state), data(other.data) {
 		if (!other.empty()) {
 			other.data -> move(other.val, val);
 			other.data = nullptr;
@@ -126,6 +126,12 @@ private:
 
 	static const size_t SIZE = 16;
 
+	enum storage_state {
+		EMPTY,
+		SMALL,
+		BIG
+	} state;
+
 	union storage {
 		void* big_val;
 		std::aligned_storage<SIZE,SIZE>::type small_val;
@@ -194,12 +200,6 @@ private:
 	};
 
 	base_holder* data;
-
-	enum storage_state {
-		EMPTY,
-		SMALL,
-		BIG
-	} state;
 
 	void clear() {
 		if (state != EMPTY) {

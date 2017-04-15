@@ -46,7 +46,7 @@ void test_3() {
 }
 
 void test_4() {
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 5; i++) {
         big cc(i);
         any temp1(cc);
         any temp2(temp1);
@@ -127,7 +127,7 @@ int main() {
     test_3();
     // test_4();
     // test_5();
-    test_6();
+    // test_6();
     test_big_big();
     test_small_big();
     test_big_small();
