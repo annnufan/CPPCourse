@@ -33,7 +33,7 @@ public:
 		construct(std::forward<ValType>(other));
 	}
 
-	any & operator=(const any & other) {
+	any & operator=(any const  & other) {
 		any(other).swap(*this);
 		return *this;
 	}
@@ -44,7 +44,7 @@ public:
 	}
 
 	template<typename ValType> 
-	any & operator=(const ValType & other) {
+	any & operator=(ValType const & other) {
 		any(other).swap(*this);
 		return *this;
 	}
@@ -55,12 +55,12 @@ public:
         return *this;
 	}
 
-	any & swap(any & other) {
+	void swap(any & other) {
 		if (data == other.data) {
 			if (state != EMPTY) {
 				data->swap(val, other.val);
 			}
-			return *this;
+			return;
 		}
 		any tmp(std::move(other));
 		other.data = data;
@@ -72,10 +72,9 @@ public:
 		state = tmp.state;
 		if (tmp.data != nullptr) {
 			tmp.data->move(tmp.val, val);
-			tmp = nullptr;
+			tmp.data = nullptr;
 			tmp.state = EMPTY;
 		}
-		return *this;
 	}
 
 	bool empty() const {

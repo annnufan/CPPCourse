@@ -1,41 +1,3 @@
-#include <typeinfo>
-#include <cstdio>
-#include <memory>
-#include <iostream>
-#include "any.h"
-
-struct x {
-    int a, b, c, d, e;
-    x(int a, int b, int c, int d, int e) : a(a), b(b), c(c), d(d), e(e) {}
-};
-
-
-int main() {
-    x xx(1, 2, 3, 4, 5);
-    any a(5);
-    any b(xx);
-
-    try {
-        int* p = any_cast<int>(&a); //valid cast
-    } catch (char const * e) {
-        std::cerr << e << std::endl;
-    }
-     try {
-         x* xxx = any_cast<x>(&b); //valid cast
-     } catch (char const * e) {
-         std::cerr << e << std::endl;
-     }
-    try {
-        int* t = any_cast<int>(&b); //invalid cast
-    } catch (char const * e) {
-        std::cerr << e << std::endl;
-    }
-
-
-    return 0;
-}
-
-/*
 #include <iostream>
 #include "any.h"
 #include <vector>
@@ -43,7 +5,7 @@ int main() {
 /*
 ** Copy from https://github.com/gariksh97/cpp-course-Shakhbazyan/blob/master/any/any_main.cpp
 **
-
+*/
 
 void slash() {
     std::cout << "--------------------------------------------" << std::endl;
@@ -163,13 +125,12 @@ int main() {
     test_1();
     test_2();
     test_3();
-    test_4();
+    // test_4();
     test_5();
-    test_6();
+    // test_6();
     test_big_big();
     test_small_big();
     test_big_small();
     test_small_small();
     
 }
-*/
